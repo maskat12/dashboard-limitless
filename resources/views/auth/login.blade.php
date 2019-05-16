@@ -1,73 +1,82 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Login') }}</div>
+<div class="content d-flex justify-content-center align-items-center">
+    <form class="login-form form-click-disabled" method="POST" action="{{url('login')}}">
+        {{ csrf_field() }}
+        <div class="card mb-0">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="icon-reading icon-2x text-slate-300 border-slate-300 border-3 rounded-round p-3 mb-3 mt-1"></i>
+                    <h5 class="mb-0">Login to your account</h5>
+                    <span class="d-block text-muted">Enter your credentials below</span>
+                    @if ($errors->has('message'))
+                    <span class="help-block text-center">
+                        <strong class="text-danger">{{$errors->first('message')}}</strong>
+                    </span>
+                    @endif
+                    @if ($errors->has('username') || $errors->has('email'))
+                        <span class="help-block text-center">
+                            <strong class="text-danger">{{ $errors->first('username') ? $errors->first('username') : $errors->first('email')}}</strong>
+                        </span>
+                    @endif
+                    @if ($errors->has('password'))
+                        <span class="help-block text-center">
+                            <strong class="text-danger">{{ $errors->first('password') }}</strong>
+                        </span>
+                    @endif
+                </div>
+                @if($errors->has('inactive_user'))
+                    @php 
+                        $inactive_data = json_decode($errors->first('inactive_user'));
+                    @endphp
+                    @if($inactive_data->is_active == 0)
+                    <div class="alert alert-info border-0 text-center">
+                        <button type="button" class="close" data-dismiss="alert"><span>×</span></button>
+                        <span class="font-weight-semibold text-danger">Account Not Activated!</span><p>Check your email to activate this account or if you didnt receive any email you can try to <br><a href="{{route('resend')}}" class="alert-link">Request New Confirmation Email</a>.
+                    </div>
+                    @elseif($inactive_data->is_active == 2)
+                    <div class="alert alert-danger border-0 text-center">
+                        <button type="button" class="close" data-dismiss="alert"><span>×</span></button>
+                        <span class="font-weight-semibold">Account Suspended!</span><p>Your account has been suspended until <br><strong>{{date('d F Y',strtotime($inactive_data->suspended_expired))}}</strong>.
+                    </div>
+                    @elseif($inactive_data->is_active == 3)
+                    <div class="alert alert-danger border-0 text-center">
+                        <button type="button" class="close" data-dismiss="alert"><span>×</span></button>
+                        <span class="font-weight-semibold">Your Account has been Banned!</span>
+                    </div>
+                    @else
+                    
+                    @endif
+                @endif
+                <div class="form-group form-group-feedback form-group-feedback-left">
+                    <input type="text" class="form-control" placeholder="Username" name="username" value="{{ old('email') ? old('email') : old('username')}}" required>
+                    <div class="form-control-feedback">
+                        <i class="icon-user text-muted"></i>
+                    </div>
+                </div>
 
-                <div class="card-body">
-                    <form method="POST" action="{{ route('login') }}">
-                        @csrf
-
-                        <div class="form-group row">
-                            <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>
-
-                            <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-
-                                @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
+                <div class="form-group form-group-feedback form-group-feedback-left">
+                    <input type="password" class="form-control" placeholder="Password" name="password" required>
+                    <div class="form-control-feedback">
+                        <i class="icon-lock2 text-muted"></i>
+                    </div>
+                </div>
+                <div class="form-group d-flex align-items-center">
+                    <div class="form-check mb-0">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="remember" class="remember-me-check" {{ old('remember') ? 'checked' : '' }}> Remember Me
+                            </label>
                         </div>
-
-                        <div class="form-group row">
-                            <label for="password" class="col-md-4 col-form-label text-md-right">{{ __('Password') }}</label>
-
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
-
-                                @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <div class="col-md-6 offset-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-
-                                    <label class="form-check-label" for="remember">
-                                        {{ __('Remember Me') }}
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group row mb-0">
-                            <div class="col-md-8 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('Login') }}
-                                </button>
-
-                                @if (Route::has('password.request'))
-                                    <a class="btn btn-link" href="{{ route('password.request') }}">
-                                        {{ __('Forgot Your Password?') }}
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    </form>
+                    </div>
+                    <a href="{{ route('password.request') }}" class="ml-auto">Forgot password?</a>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Sign in <i class="icon-circle-right2 ml-2"></i></button>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 @endsection
